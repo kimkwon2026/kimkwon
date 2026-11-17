@@ -21,7 +21,7 @@ KST = datetime.timezone(datetime.timedelta(hours=9))
 
 # id, 한글명, 이모지, 영문명, 한글 검색어, 영문 검색어, 최근 며칠
 TOPICS = [
-    ("travel", "여행", "🧳", "Travel", "여행 OR 관광 OR 항공", "travel OR tourism OR airline", 3),
+    ("travel", "여행", "🧳", "Travel", "여행 OR 여행지 OR 관광지 OR 해외여행", "travel OR tourism OR destination OR trip", 3),
     ("lit", "문학", "📖", "Books & Literature", "문학 OR 소설 OR 시집 OR 작가", "books OR novel OR literature OR author", 5),
     ("health", "건강", "🩺", "Health", "건강 OR 의학 OR 질병", "health OR medicine OR disease", 3),
     ("it", "IT·AI·통신", "💻", "Tech & AI", "AI OR 인공지능 OR 반도체 OR 통신 OR 스마트폰", "AI OR technology OR chips OR smartphone", 2),
