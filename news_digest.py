@@ -6,12 +6,14 @@ GitHub Actions가 매일 실행해서 GitHub Pages로 배포합니다.
 """
 import datetime
 import html
+import json
 import os
 import re
 import shutil
 import socket
 import time
 import urllib.parse
+import urllib.request
 
 import feedparser
 
@@ -73,6 +75,20 @@ def fetch(url):
         return []
 
 
+def translate(text):
+    """영어 → 한국어 (구글 번역 공개 엔드포인트, 키 불필요). 실패하면 None."""
+    url = ("https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q="
+           + urllib.parse.quote(text))
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.load(r)
+        out = "".join(seg[0] for seg in data[0] if seg and seg[0]).strip()
+        return out or None
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def entry_time(e):
     p = e.get("published_parsed") or e.get("updated_parsed")
     if not p:
@@ -85,7 +101,7 @@ def collect(lang):
     result, warnings = [], []
     for tid, ko, emoji, en, kw_ko, kw_en, days in TOPICS:
         kw = kw_ko if lang == "ko" else kw_en
-        label = f"{emoji} {ko}" if lang == "ko" else f"{emoji} {en}"
+        label = f"{emoji} {ko}"
         seen, items = set(), []
         for name, domain in outlets:
             if name in IT_ONLY and tid != "it":
@@ -110,6 +126,14 @@ def collect(lang):
                 seen.update([link, key])
                 items.append({"outlet": name, "title": title, "link": link, "t": entry_time(e)})
         items.sort(key=lambda x: x["t"] or datetime.datetime(1970, 1, 1, tzinfo=KST), reverse=True)
+        if lang == "en":
+            failed = 0
+            for it in items:
+                it["ko"] = translate(it["title"])
+                failed += it["ko"] is None
+                time.sleep(0.15)
+            if failed:
+                warnings.append(f"{label} 번역 실패 {failed}건(영어 원문으로 표시)")
         result.append((tid, label, items))
     return result, warnings
 
@@ -134,6 +158,7 @@ li{padding:10px 14px;border-bottom:1px solid var(--line)}li:last-child{border:0}
 li a{color:var(--fg);text-decoration:none;font-weight:500}li a:active{color:var(--link)}
 .meta{color:var(--sub);font-size:12px;margin-top:2px}.empty{color:var(--sub);padding:12px 14px}
 .warn{color:var(--sub);font-size:12px;margin-top:28px}
+.orig{color:var(--sub);font-size:12.5px;margin-top:2px}
 """
 JS = """
 const chips=document.querySelectorAll('.chips button'),secs=document.querySelectorAll('section');
@@ -146,12 +171,12 @@ def render(result, warnings, lang):
     now = datetime.datetime.now(KST)
     if lang == "ko":
         title, upd = "📰 내 뉴스", f"{now.month}/{now.day}({KO_DAYS[now.weekday()]}) {now:%H:%M} 갱신"
-        nav, all_label, empty = '<a href="global.html">해외 (영어)</a>', "전체", "기사 없음"
+        nav, all_label, empty = '<a href="global.html">해외 뉴스</a>', "전체", "기사 없음"
         h_lang = "ko"
     else:
-        title, upd = "📰 Global News", f"Updated {now:%b %d, %H:%M} KST"
-        nav, all_label, empty = '<a href="index.html">KR News</a>', "All", "No articles"
-        h_lang = "en"
+        title, upd = "🌐 해외 뉴스", f"{now.month}/{now.day}({KO_DAYS[now.weekday()]}) {now:%H:%M} 갱신 · 자동 번역"
+        nav, all_label, empty = '<a href="index.html">국내 뉴스</a>', "전체", "기사 없음"
+        h_lang = "ko"
     out = [f'<!doctype html><html lang="{h_lang}"><head><meta charset="utf-8">',
            '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
            '<meta name="apple-mobile-web-app-capable" content="yes">',
@@ -168,8 +193,13 @@ def render(result, warnings, lang):
             out.append(f'<li class="empty">{empty}</li>')
         for it in items:
             tm = f" · {it['t']:%m/%d %H:%M}" if it["t"] else ""
+            ko_title = it.get("ko")
+            shown = ko_title or it["title"]
+            orig = (f'<div class="orig" lang="en">{html.escape(it["title"])}</div>'
+                    if ko_title else "")
             out.append(f'<li><a href="{html.escape(it["link"])}" target="_blank" rel="noopener">'
-                       f'{html.escape(it["title"])}</a><div class="meta">{html.escape(it["outlet"])}{tm}</div></li>')
+                       f'{html.escape(shown)}</a>{orig}'
+                       f'<div class="meta">{html.escape(it["outlet"])}{tm}</div></li>')
         out.append("</ul></section>")
     if warnings:
         out.append(f'<p class="warn">⚠ {html.escape(", ".join(warnings))}</p>')
