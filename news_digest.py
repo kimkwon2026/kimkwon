@@ -8,6 +8,7 @@ import datetime
 import html
 import os
 import re
+import shutil
 import socket
 import time
 import urllib.parse
@@ -155,6 +156,7 @@ def render(result, warnings, lang):
            '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
            '<meta name="apple-mobile-web-app-capable" content="yes">',
            f'<meta name="apple-mobile-web-app-title" content="{html.escape(title[2:])}">',
+           '<link rel="apple-touch-icon" href="icon.png"><link rel="icon" href="icon.png">',
            f'<title>{html.escape(title)}</title><style>{CSS}</style></head><body>',
            f'<header><div class="top"><h1>{title}</h1><nav>{nav}</nav></div>',
            f'<div class="upd">{upd}</div><div class="chips"><button class="on" data-t="all">{all_label}</button>']
@@ -177,6 +179,8 @@ def render(result, warnings, lang):
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
+    if os.path.exists("icon.png"):
+        shutil.copy("icon.png", os.path.join(OUT, "icon.png"))
     for lang, fname in (("ko", "index.html"), ("en", "global.html")):
         data, warns = collect(lang)
         with open(os.path.join(OUT, fname), "w", encoding="utf-8") as f:
