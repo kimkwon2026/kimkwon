@@ -24,12 +24,12 @@ KST = datetime.timezone(datetime.timedelta(hours=9))
 
 # id, 한글명, 이모지, 영문명, 한글 검색어, 영문 검색어, 최근 며칠
 TOPICS = [
-    ("travel", "여행", "🧳", "Travel", "여행 OR 여행지 OR 관광지 OR 해외여행", "travel OR tourism OR destination OR trip", 3),
-    ("lit", "문학", "📖", "Books & Literature", "문학 OR 소설 OR 시집 OR 작가", "books OR novel OR literature OR author", 5),
+    ("travel", "여행", "🧳", "Travel", "여행 OR 여행지 OR 관광지 OR 배낭여행 OR 조지아여행 OR 기차여행 OR 아프리카여행 OR 산티아고순례길 OR 도보여행", "travel OR tourism OR destination OR trip", 3),
+    ("lit", "문학", "📖", "Books & Literature", "문학 OR 소설 OR 작가 OR 인문학 OR 에세이 OR 역사소설 OR 철학 OR 세계문학 OR 고전", "books OR novel OR literature OR author", 5),
     ("health", "건강", "🩺", "Health", "건강 OR 의학 OR 질병", "health OR medicine OR disease", 3),
-    ("it", "IT·AI·통신", "💻", "Tech & AI", "AI OR 인공지능 OR 반도체 OR 통신 OR 스마트폰", "AI OR technology OR chips OR smartphone", 2),
+    ("it", "IT·AI·통신", "💻", "Tech & AI", "AI OR 인공지능 OR 반도체 OR 통신 OR 스마트폰 OR 클로드코드 OR ai코딩", "AI OR technology OR chips OR smartphone", 2),
     ("politics", "정치", "🏛", "Politics", "정치", "politics", 1),
-    ("fashion", "패션", "👗", "Fashion", "패션 OR 뷰티 OR 디자이너", "fashion OR style OR designer", 5),
+    ("fashion", "패션", "👗", "Fashion", "패션 OR 디자이너", "fashion OR style OR designer", 5),
 ]
 
 KO_OUTLETS = [("중앙일보", "joongang.co.kr"), ("조선일보", "chosun.com"), ("동아일보", "donga.com"),
@@ -170,7 +170,7 @@ secs.forEach(s=>s.style.display=(b.dataset.t==='all'||s.id===b.dataset.t)?'':'no
 def render(result, warnings, lang):
     now = datetime.datetime.now(KST)
     if lang == "ko":
-        title, upd = "📰 내 뉴스", f"{now.month}/{now.day}({KO_DAYS[now.weekday()]}) {now:%H:%M} 갱신"
+        title, upd = "📰 국내 뉴스", f"{now.month}/{now.day}({KO_DAYS[now.weekday()]}) {now:%H:%M} 갱신"
         nav, all_label, empty = '<a href="global.html">해외 뉴스</a>', "전체", "기사 없음"
         h_lang = "ko"
     else:
