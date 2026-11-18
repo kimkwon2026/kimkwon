@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#172b3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="내 뉴스">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<title>내 뉴스</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{--bg:#f4f4f1;--pane:#fff;--fg:#1b1d21;--sub:#6b7280;--line:#e8e6e0;--acc:#1f5eff;--chip:#eceae4;--fs:18px;
+--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root{--bg:#0e0f11;--pane:#16171a;--fg:#ececec;--sub:#9aa0a6;--line:#27292d;--acc:#8ab4f8;--chip:#24262a}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:"Pretendard","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+#app{display:grid;grid-template-columns:minmax(0,1fr);height:100dvh}
+#listPane{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--pane)}
+#hd{min-width:0;padding:calc(10px + var(--sat)) 14px 6px;border-bottom:1px solid var(--line);background:var(--pane)}
+.row1{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.row1 h1{font-size:19px;margin:0;font-weight:750;letter-spacing:-.02em;cursor:pointer}
+#built{color:var(--sub);font-size:12px}
+.seg{display:flex;background:var(--chip);border-radius:10px;padding:3px;margin:10px 0 4px}
+.seg button{flex:1;border:0;background:none;padding:7px 0;border-radius:8px;font-weight:650;font-size:14px;color:var(--sub)}
+.seg button.on{background:var(--pane);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.chips{max-width:100%;display:flex;gap:6px;overflow-x:auto;padding:6px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;border:0;background:var(--chip);padding:6px 12px;border-radius:999px;font-size:13.5px;white-space:nowrap}
+.chips button.on{background:var(--fg);color:var(--pane)}
+#subs button{font-size:12.5px;padding:5px 10px;background:none;border:1px solid var(--line)}
+#subs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+#q{width:100%;margin:6px 0 6px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);font:inherit;font-size:14px}
+#listScroll{flex:1;overflow:auto;padding-bottom:var(--sab)}
+#list{list-style:none;margin:0;padding:0}
+.it{padding:13px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.it:active,.it.cur{background:var(--chip)}
+.tt{font-size:16px;line-height:1.45;font-weight:600;letter-spacing:-.012em;word-break:keep-all;overflow-wrap:anywhere}
+.mt{margin-top:5px;font-size:12.5px;color:var(--sub);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.mt b{color:var(--fg);font-weight:650}
+.tag{background:var(--chip);border-radius:6px;padding:1px 6px}
+.ic{margin-left:auto;font-size:12px}
+.ic.in{color:var(--acc)}
+.empty{padding:40px 20px;text-align:center;color:var(--sub)}
+
+#readerPane{display:none;position:fixed;inset:0;z-index:20;background:var(--pane);overflow:auto;-webkit-overflow-scrolling:touch}
+body.reading #readerPane{display:block}
+.rbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:6px;padding:calc(8px + var(--sat)) 12px 8px;background:var(--pane);border-bottom:1px solid var(--line)}
+.rbar .sp{flex:1}
+.rbar button,.rbar a{border:1px solid var(--line);background:none;border-radius:9px;padding:6px 11px;font-size:13.5px;color:var(--fg);text-decoration:none;white-space:nowrap}
+.rbar button.on{background:var(--fg);color:var(--pane);border-color:var(--fg)}
+.rbar a{color:var(--acc);border-color:transparent}
+#rmsg{padding:60px 24px;text-align:center;color:var(--sub);line-height:1.7}
+#rmsg button{margin-top:14px;border:1px solid var(--line);background:none;padding:9px 16px;border-radius:10px;color:var(--acc)}
+
+.reader{max-width:41rem;margin:0 auto;padding:22px 22px calc(90px + var(--sab));font-size:var(--fs);line-height:1.88}
+.reader .kick{color:var(--acc);font-weight:700;font-size:.78em;letter-spacing:.02em}
+.reader h1{font-size:calc(var(--fs)*1.5);line-height:1.38;margin:.35em 0 .55em;font-weight:760;letter-spacing:-.022em;word-break:keep-all;text-wrap:balance}
+.reader .meta{color:var(--sub);font-size:.78em;padding-bottom:1.1em;margin-bottom:1.3em;border-bottom:1px solid var(--line)}
+.reader p{margin:0 0 1.2em}
+.reader.ko p{word-break:keep-all;overflow-wrap:break-word;letter-spacing:-.012em}
+.reader.en p{hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}
+.reader.just p{text-align:justify}
+.reader .note{margin-top:2.4em;padding-top:1em;border-top:1px solid var(--line);color:var(--sub);font-size:.74em;line-height:1.7;text-align:left}
+
+#lock{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+#lock[hidden]{display:none}
+#lock form{background:var(--pane);border-radius:16px;padding:22px;width:min(360px,100%)}
+#lock h3{margin:0 0 6px;font-size:17px}
+#lock p{margin:0 0 14px;color:var(--sub);font-size:13.5px;line-height:1.6}
+#lock input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);font:inherit;font-size:16px}
+#lock .btns{display:flex;gap:8px;margin-top:14px}
+#lock .btns button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:none}
+#lock .btns button.go{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:650}
+#pwe{color:#d93025;font-size:13px;min-height:1.2em;margin-top:8px}
+
+@media(min-width:860px){
+ #app{grid-template-columns:minmax(350px,430px) minmax(0,1fr)}
+ #readerPane{display:block;position:static;border-left:1px solid var(--line)}
+ .only-narrow{display:none!important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="listPane">
+    <header id="hd">
+      <div class="row1"><h1 id="ttl">📰 내 뉴스</h1><span id="built"></span></div>
+      <div class="seg" id="seg"></div>
+      <div class="chips" id="cats"></div>
+      <div class="chips" id="subs"></div>
+      <input id="q" type="search" placeholder="제목·언론사 검색">
+    </header>
+    <div id="listScroll"><ul id="list"></ul></div>
+  </aside>
+  <main id="readerPane">
+    <div class="rbar">
+      <button class="only-narrow" id="back">← 목록</button>
+      <span class="sp"></span>
+      <button id="fm" aria-label="글자 작게">A−</button>
+      <button id="fp" aria-label="글자 크게">A+</button>
+      <button id="just">줄맞춤</button>
+      <a id="orig" target="_blank" rel="noopener">원문 ↗</a>
+    </div>
+    <div id="rmsg">왼쪽 목록에서 기사를 선택하세요.<br>📖 표시는 앱 안에서 읽기, ↗ 표시는 새 창으로 열립니다.</div>
+    <article id="art" class="reader" hidden>
+      <div class="kick" id="aoutlet"></div>
+      <h1 id="atitle"></h1>
+      <div class="meta" id="ameta"></div>
+      <div id="abody"></div>
+      <div class="note">본문은 원문에서 개인 열람용으로 자동 추출한 것으로, 일부 내용이 빠지거나 배치가 다를 수 있습니다. 정확한 내용과 저작권은 원문 언론사에 있습니다.</div>
+    </article>
+  </main>
+</div>
+
+<div id="lock" hidden>
+  <form id="lockf" autocomplete="off">
+    <h3>🔒 열람 암호</h3>
+    <p>기사 본문은 암호화되어 저장됩니다. 빌드할 때 설정한 <b>READER_KEY</b> 암호를 입력하세요. 이 기기에는 한 번만 저장됩니다.</p>
+    <input id="pw" type="password" placeholder="암호" autocomplete="current-password">
+    <div id="pwe"></div>
+    <div class="btns"><button type="button" id="pwc">취소</button><button class="go" type="submit">확인</button></div>
+  </form>
+</div>
+
+<script>
+/*CRYPTO_START*/
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveKey(pass, salt, iter){
+  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:iter, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['decrypt']);
+}
+async function decryptBuf(key, buf){
+  const u = new Uint8Array(buf);
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:u.slice(0,12)}, key, u.slice(12));
+  return new TextDecoder().decode(pt);
+}
+/*CRYPTO_END*/
+
+(async () => {
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ls = {get:(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+            set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const st = Object.assign({r:'kr', c:'all', s:'all'}, ls.get('st', {}));
+let fs = ls.get('fs', 18), just = ls.get('just', true);
+let D = null, key = null, byId = {}, q = '';
+let listTop = 0;
+
+function applyPrefs(){
+  document.documentElement.style.setProperty('--fs', fs + 'px');
+  $('#just').classList.toggle('on', just);
+  $('#art').classList.toggle('just', just);
+}
+function fmt(iso, full){
+  const d = new Date(iso), now = Date.now(), diff = (now - d.getTime()) / 60000;
+  if(!full){
+    if(diff < 60) return Math.max(1, Math.round(diff)) + '분 전';
+    if(diff < 1440) return Math.round(diff/60) + '시간 전';
+  }
+  return d.toLocaleString('ko-KR', {timeZone:'Asia/Seoul', month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false});
+}
+const catName = id => (D.tax.find(c => c.id === id) || {}).name || id;
+
+function chips(){
+  $('#seg').innerHTML = [['kr','🇰🇷 국내 뉴스'],['gl','🌍 해외 뉴스']]
+    .map(([k,l]) => `<button data-r="${k}" class="${st.r===k?'on':''}">${l}</button>`).join('');
+  $('#cats').innerHTML = [{id:'all',name:'전체'}, ...D.tax]
+    .map(c => `<button data-c="${c.id}" class="${st.c===c.id?'on':''}">${esc(c.name)}</button>`).join('');
+  const cat = D.tax.find(c => c.id === st.c);
+  $('#subs').style.display = cat ? '' : 'none';
+  $('#subs').innerHTML = cat ? ['전체', ...cat.subs]
+    .map(s => `<button data-s="${s==='전체'?'all':esc(s)}" class="${(st.s==='all'&&s==='전체')||st.s===s?'on':''}">${esc(s)}</button>`).join('') : '';
+}
+function match(it){
+  if(st.c === 'all') return true;
+  if(st.s === 'all') return it.tags.some(t => t.startsWith(st.c + '|'));
+  return it.tags.includes(st.c + '|' + st.s);
+}
+function tagLabel(it){
+  const t = it.tags.find(t => st.c === 'all' || t.startsWith(st.c + '|')) || it.tags[0];
+  const [c, s] = t.split('|');
+  return st.c === 'all' ? catName(c) + ' · ' + s : s;
+}
+function list(){
+  const items = D.items.filter(it => it.r === st.r && match(it) &&
+    (!q || (it.t + ' ' + it.o).toLowerCase().includes(q))).sort((a,b) => b.d.localeCompare(a.d));
+  $('#list').innerHTML = items.length ? items.map(it => `
+    <li class="it${it.id===curId?' cur':''}" data-id="${it.id}">
+      <div class="tt">${esc(it.t)}</div>
+      <div class="mt"><b>${esc(it.o)}</b><span>${fmt(it.d)}</span><span class="tag">${esc(tagLabel(it))}</span>
+      <span class="ic ${it.x?'in':''}">${it.x?'📖 앱에서 읽기':'↗ 새 창'}</span></div>
+    </li>`).join('') : '<li class="empty">표시할 기사가 없습니다.</li>';
+}
+function refresh(){ ls.set('st', st); chips(); list(); $('#listScroll').scrollTop = 0; }
+
+// ── 열람 암호 ──
+function askPass(msg){
+  return new Promise(res => {
+    $('#pwe').textContent = msg || ''; $('#pw').value = ''; $('#lock').hidden = false; setTimeout(() => $('#pw').focus(), 50);
+    const done = v => { $('#lock').hidden = true; $('#lockf').onsubmit = null; $('#pwc').onclick = null; res(v); };
+    $('#lockf').onsubmit = e => { e.preventDefault(); done($('#pw').value); };
+    $('#pwc').onclick = () => done(null);
+  });
+}
+async function getKey(){
+  if(key) return key;
+  const salt = b64(D.salt);
+  let pass = ls.get('rk', null), msg = '';
+  for(let i = 0; i < 4; i++){
+    if(!pass){ pass = await askPass(msg); if(!pass) throw new Error('cancel'); }
+    try{
+      const k = await deriveKey(pass, salt, D.iter);
+      if(await decryptBuf(k, b64(D.chk).buffer) === 'ok'){ ls.set('rk', pass); key = k; return k; }
+    }catch(e){}
+    pass = null; ls.set('rk', null); msg = '암호가 맞지 않습니다. 다시 입력하세요.';
+  }
+  throw new Error('bad');
+}
+
+// ── 리더 ──
+let curId = null;
+function msg(html){ $('#art').hidden = true; $('#rmsg').hidden = false; $('#rmsg').innerHTML = html; }
+async function readArticle(it){
+  curId = it.id;
+  document.body.classList.add('reading');
+  $('#orig').href = it.u;
+  document.querySelectorAll('.it.cur').forEach(e => e.classList.remove('cur'));
+  const row = document.querySelector(`.it[data-id="${it.id}"]`); if(row) row.classList.add('cur');
+  msg('본문을 불러오는 중…');
+  $('#readerPane').scrollTop = 0;
+  try{
+    const k = await getKey();
+    const r = await fetch('data/a/' + it.id + '.bin');
+    if(!r.ok) throw new Error('404');
+    const j = JSON.parse(await decryptBuf(k, await r.arrayBuffer()));
+    if(curId !== it.id) return;
+    const ko = it.r === 'kr';
+    $('#art').lang = ko ? 'ko' : 'en';
+    $('#art').className = 'reader ' + (ko ? 'ko' : 'en') + (just ? ' just' : '');
+    $('#aoutlet').textContent = it.o;
+    $('#atitle').textContent = it.t;
+    $('#ameta').textContent = fmt(it.d, true) + ' · ' + (ko ? '국내' : '해외');
+    $('#abody').innerHTML = j.p.map(p => '<p>' + esc(p) + '</p>').join('');
+    $('#rmsg').hidden = true; $('#art').hidden = false;
+    $('#readerPane').scrollTop = 0;
+  }catch(e){
+    if(e.message === 'cancel') { closeReader(); return; }
+    msg('이 기사는 앱 안에서 열 수 없습니다.<br><button onclick="window.open(document.querySelector(\'#orig\').href,\'_blank\',\'noopener\')">새 창에서 열기 ↗</button>');
+  }
+}
+function openItem(id){
+  const it = byId[id]; if(!it) return;
+  if(!it.x){ window.open(it.u, '_blank', 'noopener'); return; }   // 본문 수집 불가 → 새 창
+  if(location.hash !== '#a=' + id) location.hash = 'a=' + id; else route();
+}
+function closeReader(){
+  document.body.classList.remove('reading');
+  $('#listScroll').scrollTop = listTop;
+}
+function route(){
+  const m = location.hash.match(/a=([0-9a-f]+)/);
+  if(m && byId[m[1]] && byId[m[1]].x){ readArticle(byId[m[1]]); }
+  else{ curId = null; closeReader(); document.querySelectorAll('.it.cur').forEach(e => e.classList.remove('cur'));
+        msg('왼쪽 목록에서 기사를 선택하세요.<br>📖 표시는 앱 안에서 읽기, ↗ 표시는 새 창으로 열립니다.'); }
+}
+
+// ── 이벤트 ──
+$('#seg').onclick = e => { const b = e.target.closest('button'); if(!b) return; st.r = b.dataset.r; refresh(); };
+$('#cats').onclick = e => { const b = e.target.closest('button'); if(!b) return; st.c = b.dataset.c; st.s = 'all'; refresh(); };
+$('#subs').onclick = e => { const b = e.target.closest('button'); if(!b) return; st.s = b.dataset.s; refresh(); };
+$('#q').oninput = e => { q = e.target.value.trim().toLowerCase(); list(); };
+$('#list').onclick = e => { const li = e.target.closest('.it'); if(!li) return; listTop = $('#listScroll').scrollTop; openItem(li.dataset.id); };
+$('#back').onclick = () => { if(history.length > 1) history.back(); else { history.replaceState(null, '', location.pathname); route(); } };
+$('#fm').onclick = () => { fs = Math.max(14, fs - 1); ls.set('fs', fs); applyPrefs(); };
+$('#fp').onclick = () => { fs = Math.min(28, fs + 1); ls.set('fs', fs); applyPrefs(); };
+$('#just').onclick = () => { just = !just; ls.set('just', just); applyPrefs(); };
+$('#ttl').onclick = () => location.reload();
+window.addEventListener('hashchange', route);
+
+// ── 시작 ──
+try{
+  D = await (await fetch('data/index.json', {cache:'no-cache'})).json();
+}catch(e){
+  $('#list').innerHTML = '<li class="empty">데이터를 불러오지 못했습니다. 잠시 후 다시 시도하세요.</li>'; return;
+}
+D.items.forEach(it => byId[it.id] = it);
+$('#built').textContent = fmt(D.built, true) + ' 갱신';
+applyPrefs(); chips(); list(); route();
+})();
+</script>
+</body>
+</html>
